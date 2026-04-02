@@ -1,5 +1,19 @@
 # GCP Terraform Kit
 
+> **Open Source** — Free to use, fork, and contribute.
+> Need help building or securing your GCP infrastructure? **[Contact CloudRelo](https://www.cloudrelo.com/)** for expert consultation and support.
+
+---
+
+## Free GCP Discovery Consultation
+
+**Spending $2,500/month or more on GCP?**
+You qualify for a **free one-hour Discovery Session** with the CloudRelo team — covering infrastructure review, cost optimization, security posture, and migration planning.
+
+[**Book your free session → cloudrelo.com**](https://www.cloudrelo.com/)
+
+---
+
 A production-grade Terraform kit for spinning up a complete GCP organization landing zone and deploying resources into it. Supports both standard and HIPAA-compliant landing zones with shared and non-shared VPC modes.
 
 ---
@@ -372,3 +386,35 @@ terraform destroy -var-file=env/dev.tfvars
 | `Error: assuredworkloads billing account not eligible` | Billing account must be associated with your organization (not standalone) |
 | Shared VPC subnets not visible in service project | Verify `compute.xpnAdmin` is granted at org level and subnet-level IAM is set |
 | `Error: googleapi 409 already exists` | Resource already exists outside Terraform — use `terraform import` to adopt it |
+
+---
+
+## Support & Professional Services
+
+This project is **open source** and free to use. Community contributions and issues are welcome.
+
+If you need hands-on help designing, building, securing, or migrating your GCP infrastructure, the team at **[CloudRelo](https://www.cloudrelo.com/)** offers expert GCP consultation and managed services.
+
+### Free Discovery Session
+
+**If you're spending $2,500/month or more on GCP**, you are eligible for a complimentary **one-hour Discovery Session** — no strings attached. In this session the CloudRelo team will:
+
+- Review your existing GCP infrastructure and architecture
+- Identify security gaps and compliance risks
+- Highlight cost optimization opportunities
+- Map out a migration or improvement roadmap
+
+[**Claim your free session at cloudrelo.com →**](https://www.cloudrelo.com/)
+
+### What CloudRelo Can Help With
+
+- GCP landing zone design and implementation
+- Secure, production-ready Terraform infrastructure
+- HIPAA / PCI / SOC 2 compliant GCP environments
+- GCP cost optimization and FinOps
+- Cloud migration planning and execution
+- Ongoing GCP managed support
+
+---
+
+*Built and maintained with support from [CloudRelo](https://www.cloudrelo.com/) — GCP infrastructure experts.*
