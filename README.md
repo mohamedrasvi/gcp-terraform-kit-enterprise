@@ -105,16 +105,86 @@ gcloud CLI (authenticated)
 ```
 
 ### 5. Authenticate Terraform
+
+#### Option A — Local dev (seed/bootstrap only)
+
+Use your personal gcloud credentials **only** when running the one-time `bootstrap/` step locally.
+Do **not** use this for `foundation/` or `resources/` — use the Workload Identity Pool below for those.
+
 ```bash
-# Option A: User credentials (local dev)
 gcloud auth application-default login
-
-# Option B: Service account key
-export GOOGLE_APPLICATION_CREDENTIALS="/path/to/sa-key.json"
-
-# Option C: Workload Identity (recommended for CI/CD)
-# Configure impersonation in your pipeline
 ```
+
+#### Option B — Workload Identity Federation (all other layers)
+
+All non-bootstrap layers (`foundation/`, `resources/`) authenticate via a **Workload Identity Pool** —
+no long-lived service account keys, no `GOOGLE_APPLICATION_CREDENTIALS` file.
+
+**1. Create the Workload Identity Pool and Provider (run once)**
+
+```bash
+# Create the pool
+gcloud iam workload-identity-pools create "terraform-pool" \
+  --project="<SEED_PROJECT_ID>" \
+  --location="global" \
+  --display-name="Terraform Workload Identity Pool"
+
+# Create a provider (example: GitHub Actions OIDC)
+gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+  --project="<SEED_PROJECT_ID>" \
+  --location="global" \
+  --workload-identity-pool="terraform-pool" \
+  --display-name="GitHub Actions" \
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+  --attribute-condition="assertion.repository=='<YOUR_ORG>/<YOUR_REPO>'"
+```
+
+**2. Grant the pool permission to impersonate the Terraform SA**
+
+```bash
+# Get the pool's full resource name
+POOL=$(gcloud iam workload-identity-pools describe "terraform-pool" \
+  --project="<SEED_PROJECT_ID>" \
+  --location="global" \
+  --format="value(name)")
+
+# Allow the pool to impersonate the Terraform service account
+gcloud iam service-accounts add-iam-policy-binding \
+  "terraform@<SEED_PROJECT_ID>.iam.gserviceaccount.com" \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/${POOL}/attribute.repository/<YOUR_ORG>/<YOUR_REPO>"
+```
+
+**3. Configure your pipeline (GitHub Actions example)**
+
+```yaml
+- name: Authenticate to GCP
+  uses: google-github-actions/auth@v2
+  with:
+    workload_identity_provider: "projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/terraform-pool/providers/github-provider"
+    service_account: "terraform@<SEED_PROJECT_ID>.iam.gserviceaccount.com"
+
+- name: Terraform Init
+  run: |
+    cd foundation/standard
+    terraform init -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+                   -backend-config="prefix=foundation/standard"
+
+- name: Terraform Apply
+  run: |
+    cd foundation/standard
+    terraform apply -var-file=environments/shared-vpc.tfvars -auto-approve
+```
+
+**Summary: which auth method per layer**
+
+| Layer | Where it runs | Auth method |
+|-------|--------------|-------------|
+| `bootstrap/` | Local (once only) | `gcloud auth application-default login` |
+| `foundation/standard` | CI/CD pipeline | Workload Identity Pool |
+| `foundation/hipaa` | CI/CD pipeline | Workload Identity Pool |
+| `resources/` | CI/CD pipeline | Workload Identity Pool |
 
 ---
 
