@@ -1,0 +1,4 @@
+project_id         = "my-seed-project"
+region             = "us-central1"
+bucket_name        = "my-org-tf-state"
+terraform_sa_email = "terraform@my-seed-project.iam.gserviceaccount.com"
