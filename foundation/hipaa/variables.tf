@@ -156,3 +156,21 @@ variable "enable_access_transparency" {
   type        = bool
   default     = true
 }
+
+variable "enable_vpc_service_controls" {
+  description = "Whether to enable VPC Service Controls perimeter around HIPAA projects. Requires an existing Access Context Manager access policy."
+  type        = bool
+  default     = false
+}
+
+variable "access_policy_id" {
+  description = "Numeric ID of the existing org-level Access Context Manager access policy. Required when enable_vpc_service_controls = true."
+  type        = string
+  default     = ""
+}
+
+variable "vsc_dry_run" {
+  description = "When true, VPC Service Controls perimeter is in dry-run mode. Set to false to enforce."
+  type        = bool
+  default     = true
+}

@@ -56,10 +56,11 @@ jobs:
             modules/cloud-sql-postgres modules/cloud-sql-mysql modules/sql-private-connection \
             modules/vm-instance modules/gcs-bucket modules/artifact-registry \
             modules/cloud-dns modules/bigquery modules/monitoring modules/logging \
-            modules/assured-workloads; do
+            modules/assured-workloads modules/vpc-service-controls \
+            modules/foundation-core; do
             echo "Validating $dir..."
             cd $dir
-            terraform init -backend=false -no-color
+            terraform init -backend=false -upgrade -no-color
             terraform validate -no-color
             cd $GITHUB_WORKSPACE
           done
@@ -70,7 +71,7 @@ jobs:
   plan-foundation:
     name: Plan Foundation (Standard)
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && vars.WIF_PROVIDER != ''
     environment: non-prod
 
     steps:
@@ -119,12 +120,66 @@ jobs:
             });
 
   # ---------------------------------------------------------------------------
+  # Plan foundation/hipaa on PR — posts output as a comment
+  # ---------------------------------------------------------------------------
+  plan-foundation-hipaa:
+    name: Plan Foundation (HIPAA)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && vars.WIF_PROVIDER != ''
+    environment: non-prod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.TF_SERVICE_ACCOUNT }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        working-directory: foundation/hipaa
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="prefix=foundation/hipaa" \
+            -no-color
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: foundation/hipaa
+        run: |
+          terraform plan \
+            -var-file=environments/shared-vpc.tfvars \
+            -no-color \
+            -out=tfplan 2>&1 | tee plan_output.txt
+          echo "exitcode=$?" >> $GITHUB_OUTPUT
+
+      - name: Post Plan to PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('foundation/hipaa/plan_output.txt', 'utf8');
+            const truncated = plan.length > 60000 ? plan.substring(0, 60000) + '\n...[truncated]' : plan;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan — foundation/hipaa\n\`\`\`\n${truncated}\n\`\`\``
+            });
+
+  # ---------------------------------------------------------------------------
   # Plan resources/dev on PR
   # ---------------------------------------------------------------------------
   plan-resources-dev:
     name: Plan Resources (dev)
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && vars.WIF_PROVIDER != ''
     environment: non-prod
 
     steps:
@@ -180,7 +235,7 @@ jobs:
   apply-foundation:
     name: Apply Foundation (Standard)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && vars.WIF_PROVIDER != ''
     environment: production
     needs: []
 
@@ -214,12 +269,51 @@ jobs:
             -no-color
 
   # ---------------------------------------------------------------------------
+  # Apply foundation/hipaa on merge to master
+  # ---------------------------------------------------------------------------
+  apply-foundation-hipaa:
+    name: Apply Foundation (HIPAA)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && vars.WIF_PROVIDER != ''
+    environment: production
+    needs: []
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via Workload Identity
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.TF_SERVICE_ACCOUNT }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        working-directory: foundation/hipaa
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="prefix=foundation/hipaa" \
+            -no-color
+
+      - name: Terraform Apply
+        working-directory: foundation/hipaa
+        run: |
+          terraform apply \
+            -var-file=environments/shared-vpc.tfvars \
+            -auto-approve \
+            -no-color
+
+  # ---------------------------------------------------------------------------
   # Apply resources/dev on merge to master
   # ---------------------------------------------------------------------------
   apply-resources-dev:
     name: Apply Resources (dev)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && vars.WIF_PROVIDER != ''
     environment: production
     needs: [apply-foundation]
 

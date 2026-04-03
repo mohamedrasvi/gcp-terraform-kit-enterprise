@@ -29,3 +29,18 @@ output "service_account_email" {
   value       = google_sql_database_instance.postgres.service_account_email_address
 }
 
+output "db_username" {
+  description = "The application database username."
+  value       = var.create_db_user ? var.db_username : null
+}
+
+output "db_password_secret_id" {
+  description = "The Secret Manager secret ID containing the database password. Use this to retrieve the password: gcloud secrets versions access latest --secret=<value>"
+  value       = var.create_db_user ? google_secret_manager_secret.db_password[0].secret_id : null
+}
+
+output "db_password_secret_name" {
+  description = "The full Secret Manager secret resource name."
+  value       = var.create_db_user ? google_secret_manager_secret.db_password[0].name : null
+}
+

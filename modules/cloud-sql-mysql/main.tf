@@ -3,7 +3,9 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.0"
+      version = "~> 7.0"
+      # Secret Manager resources (google_secret_manager_secret, google_secret_manager_secret_version)
+      # are included in the hashicorp/google provider — no separate provider needed.
     }
     random = {
       source  = "hashicorp/random"
@@ -89,4 +91,47 @@ resource "google_sql_database" "database" {
   name     = var.database_name
   charset  = "utf8mb4"
   collation = "utf8mb4_unicode_ci"
+}
+
+# ---------------------------------------------------------------------------
+# Optional database user + Secret Manager password storage (#4)
+# ---------------------------------------------------------------------------
+
+resource "random_password" "db_password" {
+  count            = var.create_db_user ? 1 : 0
+  length           = 32
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}|;:,.<>?"
+}
+
+resource "google_sql_user" "app_user" {
+  count    = var.create_db_user ? 1 : 0
+  project  = var.project_id
+  instance = google_sql_database_instance.mysql.name
+  name     = var.db_username
+  password = random_password.db_password[0].result
+
+  deletion_policy = "ABANDON"
+}
+
+resource "google_secret_manager_secret" "db_password" {
+  count     = var.create_db_user ? 1 : 0
+  project   = var.project_id
+  secret_id = "${var.instance_name}-db-password"
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+resource "google_secret_manager_secret_version" "db_password" {
+  count       = var.create_db_user ? 1 : 0
+  secret      = google_secret_manager_secret.db_password[0].id
+  secret_data = random_password.db_password[0].result
+
+  lifecycle {
+    ignore_changes = [secret_data]
+  }
 }
