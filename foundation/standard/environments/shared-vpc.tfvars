@@ -17,7 +17,15 @@ shared_vpc_config = {
       { project_name = "org-nonprod-dev", project_id = "myorg-nonprod-dev" },
     ]
     public_subnets = [
-      { name = "public-subnet-1", region = "us-central1", ip_cidr_range = "10.0.1.0/24" }
+      {
+        name          = "public-subnet-1"
+        region        = "us-central1"
+        ip_cidr_range = "10.0.1.0/24"
+        secondary_ranges = [
+          { range_name = "pods", ip_cidr_range = "10.100.0.0/16" },
+          { range_name = "services", ip_cidr_range = "10.101.0.0/20" },
+        ]
+      }
     ]
     private_subnets = [
       { name = "private-subnet-1", region = "us-central1", ip_cidr_range = "10.0.2.0/24" }
@@ -30,7 +38,15 @@ shared_vpc_config = {
       { project_name = "org-prod-app", project_id = "myorg-prod-app" },
     ]
     public_subnets = [
-      { name = "public-subnet-1", region = "us-central1", ip_cidr_range = "10.10.1.0/24" }
+      {
+        name          = "public-subnet-1"
+        region        = "us-central1"
+        ip_cidr_range = "10.10.1.0/24"
+        secondary_ranges = [
+          { range_name = "pods", ip_cidr_range = "10.110.0.0/16" },
+          { range_name = "services", ip_cidr_range = "10.111.0.0/20" },
+        ]
+      }
     ]
     private_subnets = [
       { name = "private-subnet-1", region = "us-central1", ip_cidr_range = "10.10.2.0/24" }

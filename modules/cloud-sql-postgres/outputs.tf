@@ -8,9 +8,10 @@ output "connection_name" {
   value       = google_sql_database_instance.postgres.connection_name
 }
 
-output "private_ip" {
+output "private_ip_address" {
   description = "The private IP address of the Cloud SQL instance."
   value       = google_sql_database_instance.postgres.private_ip_address
+  sensitive   = true
 }
 
 output "database_name" {

@@ -3,7 +3,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 5.0.0"
+      version = "~> 5.0"
     }
   }
 }
@@ -88,7 +88,7 @@ resource "google_monitoring_alert_policy" "high_memory" {
       filter          = "resource.type = \"gce_instance\" AND metric.type = \"agent.googleapis.com/memory/percent_used\" AND metric.labels.state = \"used\""
       duration        = "300s"
       comparison      = "COMPARISON_GT"
-      threshold_value = var.memory_utilization_threshold
+      threshold_value = var.memory_utilization_threshold * 100 # Ops Agent returns 0-100
 
       aggregations {
         alignment_period   = "60s"
@@ -127,7 +127,7 @@ resource "google_monitoring_alert_policy" "disk_usage" {
       filter          = "resource.type = \"gce_instance\" AND metric.type = \"agent.googleapis.com/disk/percent_used\" AND metric.labels.state = \"used\""
       duration        = "300s"
       comparison      = "COMPARISON_GT"
-      threshold_value = var.disk_usage_threshold
+      threshold_value = var.disk_usage_threshold * 100 # Ops Agent returns 0-100
 
       aggregations {
         alignment_period   = "60s"
