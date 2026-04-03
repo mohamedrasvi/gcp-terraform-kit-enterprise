@@ -3,7 +3,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 5.0.0"
+      version = "~> 5.0"
     }
   }
 }
@@ -18,9 +18,6 @@ resource "google_folder" "folders" {
   # If future provider versions support labels, add: labels = var.labels
 }
 
-resource "google_tags_tag_binding" "folder_labels" {
-  for_each  = (var.labels != null && length(var.labels) > 0) ? {} : {}
-  # Tag bindings require pre-created tag keys/values; left as extensibility hook.
-  parent    = each.key
-  tag_value = each.value
-}
+# Tag bindings require pre-created tag keys/values.
+# To use, pass a map of {parent => tag_value} via a dedicated variable.
+# Removed: previous implementation had a no-op for_each that always evaluated to {}.

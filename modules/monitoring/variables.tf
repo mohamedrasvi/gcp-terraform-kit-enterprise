@@ -42,24 +42,24 @@ variable "cpu_utilization_threshold" {
 }
 
 variable "memory_utilization_threshold" {
-  description = "Memory utilization percentage (0-100) above which the high memory alert fires."
+  description = "Memory utilization fraction (0.0-1.0) above which the high memory alert fires. The Ops Agent metric agent.googleapis.com/memory/percent_used returns 0-100, so this value is multiplied by 100 before comparison."
   type        = number
-  default     = 85
+  default     = 0.85
 
   validation {
-    condition     = var.memory_utilization_threshold > 0 && var.memory_utilization_threshold <= 100
-    error_message = "memory_utilization_threshold must be between 0 and 100."
+    condition     = var.memory_utilization_threshold > 0 && var.memory_utilization_threshold <= 1
+    error_message = "memory_utilization_threshold must be between 0 and 1 (e.g. 0.85 for 85%)."
   }
 }
 
 variable "disk_usage_threshold" {
-  description = "Disk usage percentage (0-100) above which the disk usage alert fires."
+  description = "Disk usage fraction (0.0-1.0) above which the disk usage alert fires. The Ops Agent metric agent.googleapis.com/disk/percent_used returns 0-100, so this value is multiplied by 100 before comparison."
   type        = number
-  default     = 80
+  default     = 0.80
 
   validation {
-    condition     = var.disk_usage_threshold > 0 && var.disk_usage_threshold <= 100
-    error_message = "disk_usage_threshold must be between 0 and 100."
+    condition     = var.disk_usage_threshold > 0 && var.disk_usage_threshold <= 1
+    error_message = "disk_usage_threshold must be between 0 and 1 (e.g. 0.80 for 80%)."
   }
 }
 

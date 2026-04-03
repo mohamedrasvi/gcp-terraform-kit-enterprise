@@ -32,7 +32,7 @@ module "org_policies" {
   disable_service_account_key_creation = true
   require_shielded_vm                  = true
   uniform_bucket_level_access          = true
-  deny_vm_external_ip                  = false
+  deny_vm_external_ip                  = true # Cloud NAT uses IPs on the gateway, not on VMs
 
   domain_restricted_sharing_domains = local.domain_restricted_sharing_domains
   allowed_load_balancer_types        = []

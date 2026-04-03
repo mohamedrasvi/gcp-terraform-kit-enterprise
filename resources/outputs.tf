@@ -57,6 +57,7 @@ output "cloud_sql_postgres_connection_name" {
 output "cloud_sql_postgres_private_ip" {
   description = "Private IP address of the Cloud SQL PostgreSQL instance"
   value       = var.enable_cloud_sql_postgres ? module.cloud_sql_postgres[0].private_ip_address : null
+  sensitive   = true
 }
 
 # ---------------------------------------------------------------------------
@@ -76,6 +77,7 @@ output "cloud_sql_mysql_connection_name" {
 output "cloud_sql_mysql_private_ip" {
   description = "Private IP address of the Cloud SQL MySQL instance"
   value       = var.enable_cloud_sql_mysql ? module.cloud_sql_mysql[0].private_ip_address : null
+  sensitive   = true
 }
 
 # ---------------------------------------------------------------------------

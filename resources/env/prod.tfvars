@@ -20,7 +20,7 @@ gke_autopilot_config = {
   subnet_self_link           = "projects/myorg-prod-common/regions/us-central1/subnetworks/public-subnet-1"
   pods_range_name            = "pods"
   services_range_name        = "services"
-  master_ipv4_cidr_block     = "172.16.0.0/28"
+  master_ipv4_cidr_block     = "172.16.0.16/28"
   master_authorized_networks = []
   release_channel            = "STABLE"
 }

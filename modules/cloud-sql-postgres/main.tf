@@ -3,11 +3,11 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 5.0.0"
+      version = "~> 5.0"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.4.0"
+      version = "~> 3.4"
     }
   }
 }
@@ -18,7 +18,7 @@ resource "google_compute_global_address" "private_ip_range" {
   name          = "${var.instance_name}-private-ip"
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
-  prefix_length = 16
+  prefix_length = 20
   network       = var.network_self_link
   description   = "Private IP range for Cloud SQL instance ${var.instance_name}"
 }
@@ -41,6 +41,10 @@ resource "google_sql_database_instance" "postgres" {
   region              = var.region
   database_version    = var.database_version
   deletion_protection = var.deletion_protection
+
+  lifecycle {
+    prevent_destroy = true
+  }
 
   depends_on = [google_service_networking_connection.private_vpc_connection]
 
