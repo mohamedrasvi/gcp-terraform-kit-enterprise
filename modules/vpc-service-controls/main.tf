@@ -41,12 +41,7 @@ resource "google_access_context_manager_service_perimeter" "perimeter" {
         content {
           ingress_from {
             identity_type = lookup(ingress_policies.value.from, "identity_type", null)
-            dynamic "identities" {
-              for_each = lookup(ingress_policies.value.from, "identities", [])
-              content {
-                name = identities.value
-              }
-            }
+            identities    = lookup(ingress_policies.value.from, "identities", [])
             dynamic "sources" {
               for_each = lookup(ingress_policies.value.from, "access_level_sources", [])
               content {
@@ -77,12 +72,7 @@ resource "google_access_context_manager_service_perimeter" "perimeter" {
         content {
           egress_from {
             identity_type = lookup(egress_policies.value.from, "identity_type", null)
-            dynamic "identities" {
-              for_each = lookup(egress_policies.value.from, "identities", [])
-              content {
-                name = identities.value
-              }
-            }
+            identities    = lookup(egress_policies.value.from, "identities", [])
           }
           egress_to {
             resources = lookup(egress_policies.value.to, "resources", ["*"])
@@ -120,12 +110,7 @@ resource "google_access_context_manager_service_perimeter" "perimeter" {
         content {
           ingress_from {
             identity_type = lookup(ingress_policies.value.from, "identity_type", null)
-            dynamic "identities" {
-              for_each = lookup(ingress_policies.value.from, "identities", [])
-              content {
-                name = identities.value
-              }
-            }
+            identities    = lookup(ingress_policies.value.from, "identities", [])
             dynamic "sources" {
               for_each = lookup(ingress_policies.value.from, "access_level_sources", [])
               content {
@@ -156,12 +141,7 @@ resource "google_access_context_manager_service_perimeter" "perimeter" {
         content {
           egress_from {
             identity_type = lookup(egress_policies.value.from, "identity_type", null)
-            dynamic "identities" {
-              for_each = lookup(egress_policies.value.from, "identities", [])
-              content {
-                name = identities.value
-              }
-            }
+            identities    = lookup(egress_policies.value.from, "identities", [])
           }
           egress_to {
             resources = lookup(egress_policies.value.to, "resources", ["*"])

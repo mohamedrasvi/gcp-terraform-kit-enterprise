@@ -9,10 +9,17 @@
 # ===========================================================================
 
 locals {
-  # Folder IDs from Assured Workloads — one per environment.
-  env_folder_numeric_ids = {
+  # Raw folder IDs from Assured Workloads (format: "folders/<id>").
+  # Kept as aw_folder_ids for use in org-policies.tf.
+  aw_folder_ids = {
     for env_key, aw in module.assured_workloads :
-    env_key => trimprefix(aw.folder_id, "folders/")
+    env_key => aw.folder_id
+  }
+
+  # Bare numeric folder IDs for foundation-core (no "folders/" prefix).
+  env_folder_numeric_ids = {
+    for env_key, fid in local.aw_folder_ids :
+    env_key => trimprefix(fid, "folders/")
   }
 }
 
