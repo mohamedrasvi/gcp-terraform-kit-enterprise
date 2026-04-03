@@ -204,3 +204,15 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "create_db_user" {
+  description = "Whether to create an application database user and store the password in Secret Manager."
+  type        = bool
+  default     = true
+}
+
+variable "db_username" {
+  description = "The name of the application database user to create."
+  type        = string
+  default     = "app"
+}
