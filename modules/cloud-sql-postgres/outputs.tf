@@ -29,7 +29,3 @@ output "service_account_email" {
   value       = google_sql_database_instance.postgres.service_account_email_address
 }
 
-output "private_ip_range_name" {
-  description = "The name of the reserved private IP range for the service networking connection."
-  value       = google_compute_global_address.private_ip_range.name
-}

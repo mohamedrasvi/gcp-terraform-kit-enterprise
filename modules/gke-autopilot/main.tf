@@ -67,24 +67,6 @@ resource "google_container_cluster" "autopilot" {
     enabled = true
   }
 
-  addons_config {
-    http_load_balancing {
-      disabled = false
-    }
-    horizontal_pod_autoscaling {
-      disabled = false
-    }
-    gce_persistent_disk_csi_driver_config {
-      enabled = true
-    }
-    gcs_fuse_csi_driver_config {
-      enabled = true
-    }
-    gcp_filestore_csi_driver_config {
-      enabled = true
-    }
-  }
-
   logging_config {
     enable_components = ["SYSTEM_COMPONENTS", "WORKLOADS", "APISERVER", "SCHEDULER", "CONTROLLER_MANAGER"]
   }

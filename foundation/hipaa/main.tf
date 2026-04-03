@@ -453,7 +453,80 @@ module "non_shared_logging" {
 }
 
 # ===========================================================================
-# 4. GCS State Buckets for the Resources Layer
+# 4. Baseline Firewall Rules
+# ===========================================================================
+
+locals {
+  baseline_firewall_rules = [
+    {
+      name        = "allow-iap-ssh-rdp"
+      direction   = "INGRESS"
+      description = "Allow SSH and RDP from Identity-Aware Proxy for secure access without public IPs."
+      priority    = 1000
+      ranges      = ["35.235.240.0/20"]
+      allow = [
+        { protocol = "tcp", ports = ["22", "3389"] }
+      ]
+    },
+    {
+      name        = "allow-gcp-health-checks"
+      direction   = "INGRESS"
+      description = "Allow GCP load balancer health check probes."
+      priority    = 1000
+      ranges      = ["35.191.0.0/16", "130.211.0.0/22"]
+      allow = [
+        { protocol = "tcp", ports = [] }
+      ]
+    },
+    {
+      name        = "allow-internal-rfc1918"
+      direction   = "INGRESS"
+      description = "Allow all internal traffic between RFC1918 ranges within the VPC."
+      priority    = 1000
+      ranges      = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+      allow = [
+        { protocol = "tcp", ports = [] },
+        { protocol = "udp", ports = [] },
+        { protocol = "icmp", ports = [] }
+      ]
+    },
+    {
+      name        = "deny-all-ingress"
+      direction   = "INGRESS"
+      description = "Explicit deny-all ingress at lowest priority — defense in depth."
+      priority    = 65534
+      ranges      = ["0.0.0.0/0"]
+      deny = [
+        { protocol = "all", ports = [] }
+      ]
+    },
+  ]
+}
+
+module "shared_vpc_firewall" {
+  for_each = var.vpc_mode == "shared" ? local.shared_common_projects : {}
+  source   = "../../modules/firewall"
+
+  project_id        = each.value.project_id
+  network_self_link = module.shared_vpc_network[each.key].network_self_link
+  rules             = local.baseline_firewall_rules
+
+  depends_on = [module.shared_vpc_network]
+}
+
+module "non_shared_vpc_firewall" {
+  for_each = var.vpc_mode == "non-shared" ? local.non_shared_projects : {}
+  source   = "../../modules/firewall"
+
+  project_id        = each.value.project_id
+  network_self_link = module.non_shared_vpc_network[each.key].network_self_link
+  rules             = local.baseline_firewall_rules
+
+  depends_on = [module.non_shared_vpc_network]
+}
+
+# ===========================================================================
+# 5. GCS State Buckets for the Resources Layer
 # ===========================================================================
 
 module "resource_state_buckets" {

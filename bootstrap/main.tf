@@ -45,6 +45,17 @@ variable "terraform_sa_email" {
   type        = string
 }
 
+variable "encryption_key" {
+  description = <<-EOT
+    Cloud KMS key self-link for CMEK encryption of the state bucket.
+    Required for HIPAA/regulated environments. If null, Google-managed encryption (GMEK) is used.
+    Note: the KMS key must exist before bootstrap runs (create it manually or via a separate gcloud command).
+    Example: "projects/my-project/locations/us-central1/keyRings/my-ring/cryptoKeys/my-key"
+  EOT
+  type        = string
+  default     = null
+}
+
 resource "google_storage_bucket" "tf_state" {
   name                        = var.bucket_name
   project                     = var.project_id
@@ -63,6 +74,13 @@ resource "google_storage_bucket" "tf_state" {
     }
     condition {
       num_newer_versions = 5
+    }
+  }
+
+  dynamic "encryption" {
+    for_each = var.encryption_key != null ? [1] : []
+    content {
+      default_kms_key_name = var.encryption_key
     }
   }
 }
