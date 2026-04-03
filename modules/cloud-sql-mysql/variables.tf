@@ -3,6 +3,11 @@ variable "project_id" {
   type        = string
 }
 
+variable "private_connection_id" {
+  description = "The ID of the shared private service networking connection (from the sql-private-connection module). This must be created before any Cloud SQL instance in the same VPC."
+  type        = string
+}
+
 variable "region" {
   description = "The GCP region for the Cloud SQL instance."
   type        = string
